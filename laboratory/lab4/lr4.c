@@ -1,49 +1,48 @@
 #include <stdio.h>
-#include <pthread.h>
-#include <inttypes.h>
-#include <errno.h>
+#include <time.h>
+#include <sync.h>
 #include <sys/neutrino.h>
 
-#define SEC_NSEC 1000000000LL
+barrier_t barrier;
 
-void * long_thread(void *notused)
+void* thread1(void* not_used)
 {
-  printf("Etot potok vipolnaetsa bolee 10 sekynd \n");
- sleep(20); 
+  time_t now;
+  char buf[27];
+  time(&now);
+  printf("Potok 1, vremia starta %s \n", ctime_r(&now, buf));
+  sleep(3);
+  barrier_wait(&barrier);
+  time(&now);
+  printf("barier v potoke 1 , vremia srabativania %s \n", ctime_r(&now, buf));
 }
 
-int main(void)
+void* thread2(void* not_used)
 {
-uint64_t   timeout;
-struct sigevent event;
-int rval;
-pthread_t thread_id;
+  time_t now;
+  char buf[27];
+  time(&now);
+  printf("Potok 2, vremia starta %s \n", ctime_r(&now, buf));
+  sleep(6);
+  barrier_wait(&barrier);
+  time(&now);
+  printf("barier v potoke 2 , vremia srabativania %s \n", ctime_r(&now, buf));
+}
 
-printf("Prog timer  \n");
-event.sigev_notify = SIGEV_UNBLOCK;
-//SIGEV_UNBLOCK_INIT(&event);
-pthread_create(&thread_id, NULL, long_thread, NULL);
+main()
+{
+  time_t now;
+  char buf[27];
+  barrier_init(&barrier, NULL, 3);
+  printf("Start \n");
+  pthread_create(NULL, NULL, thread1, NULL);
+  pthread_create(NULL, NULL, thread2, NULL);
+  time(&now);
+  printf(" Main(): oshidanie y bariera, vremia %s \n", ctime_r(&now, buf));
+  barrier_wait(&barrier);
+  time(&now);
+  printf("barier v main() , vremia srabativania %s \n", ctime_r(&now, buf));
+  sleep(5);
 
-timeout = 10LL*SEC_NSEC;
-TimerTimeout(CLOCK_REALTIME, _NTO_TIMEOUT_JOIN,&event, &timeout, NULL);
-rval = pthread_join(thread_id, NULL);
-  if (rval == ETIMEDOUT)
-     {
-     printf ("istekli 10 sekynd, potok %d vipolniaetsia!\n", thread_id);
-     } 
-sleep(10);
-
-TimerTimeout (CLOCK_REALTIME, _NTO_TIMEOUT_JOIN, &event, & timeout, NULL);
-rval = pthread_join(thread_id, NULL);
-  if(rval == ETIMEDOUT)
-   { 
-   printf("potok %d >25 sek!", thread_id);
-   }
-else
-  {
-   printf ("Potok %d zavershon kak nado \n", thread_id);
-  }
-
-printf("Belova Ksenia Egorovna\nGroup: I914B\n");
-return(1);
+  printf("Belova Ksenia Egorovna\nGroup: I914B\n");
 }
