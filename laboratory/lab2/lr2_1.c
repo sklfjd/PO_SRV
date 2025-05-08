@@ -1,17 +1,39 @@
 #include <stdio.h>
-#include <process.h>
+#include <pthread.h>
+#include <inttypes.h>
+#include <errno.h>
+#include <sys/neutrino.h>
+#include <sys/sched.h>
 
-int main() {
-        pid_t pid;
-        if ((pid = fork()) == -1) {
-                return 1;
-        }
-        if (pid == 0) {
-                printf("Child process, Belova Ksenia Egorovna\n");
-        }
-        else {
-                printf("Parent process, Group: I914B\n");
-        }
-        sleep(10);
-        return 0;
+void server(void) {
+    int rcvid;
+    int chid;
+    char message[512];
+    struct sched_param param;
+
+    // Устанавливаем приоритет и алгоритм планирования
+    param.sched_priority = 6;
+    pthread_setschedparam(pthread_self(), SCHED_RR, &param);
+
+    printf("Server start working \n");
+    printf("Server priority: %d, policy: RR\n", param.sched_priority);
+
+    chid = ChannelCreate(0);
+    printf("Channel id: %d \n", chid);
+    printf("PID: %d \n", getpid());
+
+    while (1) {
+        rcvid = MsgReceive(chid, message, sizeof(message), NULL);
+        printf("Received message, rcvid %X \n", rcvid);
+        printf("Message:: \"%s\". \n", message);
+        strcpy(message, "This is answer");
+        MsgReply(rcvid, EOK, message, sizeof(message));
+        printf("Replied with: \"%s\" \n", message);
+    }
+}
+
+int main(void) {
+    printf("Prog server \n");
+    server();
+    return 0;
 }
