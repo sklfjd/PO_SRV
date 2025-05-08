@@ -1,31 +1,38 @@
 #include <stdio.h>
 #include <pthread.h>
+#include <inttypes.h>
+#include <errno.h>
 #include <sys/neutrino.h>
-#include "thLib.h"
+#include <sys/sched.h>
+#include <string.h>
 
-int main() {
-	pthread_attr_t attr1, attr2;
+int main(void) {
+    char smsg[20];
+    char rmsg[200];
+    int coid;
+    long serv_pid;
+    struct sched_param param;
+
+    // Устанавливаем приоритет и алгоритм планирования
+    param.sched_priority = 12;
+    pthread_setschedparam(pthread_self(), SCHED_RR, &param);
 	
-        printf("Belova Ksenia Egorovna\nGroup: I914B\n");
-	printf("Prog threads PID %d \n", getpid());
+    printf("Client program, priority: %d, policy: RR\n", param.sched_priority);
+    printf("Enter server PID: ");
+    scanf("%ld", &serv_pid);
+    printf("Entered %ld \n", serv_pid);
+    printf("Belova Ksenia Egorovna\nGroup: I914B\n");
 
-	pthread_attr_init(&attr1);
-	pthread_attr_setinheritsched(&attr1, PTHREAD_EXPLICIT_SCHED);
-	pthread_attr_setschedpolicy(&attr1, SCHED_RR);
-	attr1.param.sched_priority = 13;
+    coid = ConnectAttach(0, serv_pid, 1, 0, 0);
+    printf("Connect result %d \n, Enter message: ", coid);
+    scanf("%s", smsg);
+    printf("Entered %s \n", smsg);
 
-	pthread_attr_init(&attr2);
-	pthread_attr_setinheritsched(&attr1, PTHREAD_EXPLICIT_SCHED);
-	pthread_attr_setschedpolicy(&attr1, SCHED_FIFO);
-	attr1.param.sched_priority = 10;
+    if (MsgSend(coid, smsg, strlen(smsg) + 1, rmsg, sizeof(rmsg)) == -1) {
+        printf("Error MsgSend \n");
+    } else {
+        printf("Received reply: %s \n", rmsg);
+    }
 
-        pthread_create(&thread_id1, NULL, long_thread1, NULL);
-        pthread_create(&thread_id2, NULL, long_thread2, NULL);
-
-	pthread_join(thread_id1, NULL);
-	
-	pthread_attr_destroy(attr1);
-	pthread_attr_destroy(attr2);
-
-        return 0;
+    return 0;
 }
