@@ -6,7 +6,8 @@
 int main() {
 	pthread_attr_t attr1, attr2;
 	
-        printf("Prog threads PID %d \n", getpid());
+        printf("Belova Ksenia Egorovna\nGroup: I914B\n");
+	printf("Prog threads PID %d \n", getpid());
 
 	pthread_attr_init(&attr1);
 	pthread_attr_setinheritsched(&attr1, PTHREAD_EXPLICIT_SCHED);
