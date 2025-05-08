@@ -15,6 +15,7 @@ void server(void) {
     param.sched_priority = 6;
     pthread_setschedparam(pthread_self(), SCHED_RR, &param);
 
+    printf("Belova Ksenia Egorovna\nGroup: I914B\n");
     printf("Server start working \n");
     printf("Server priority: %d, policy: RR\n", param.sched_priority);
 
